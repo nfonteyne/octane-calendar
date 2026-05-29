@@ -1,0 +1,8 @@
+{
+  "_comment": "Not used in the current setup. Because the Node.js app calls n8n (not the other way around), any n8n failure is returned as a non-200 HTTP response that the server catches. The app shows an error toast via its /api/workflow-status polling. If you ever expose the app publicly and want explicit error pushes from n8n, re-add an Error Trigger node that POSTs to /api/workflow-error.",
+  "name": "Band Calendar - Error Handler (unused)",
+  "nodes": [],
+  "connections": {},
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

@@ -1,0 +1,343 @@
+{
+  "name": "Band Availability - Per Person",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "calendar-availability",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-512, -48],
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Webhook",
+      "webhookId": "calendar-availability"
+    },
+    {
+      "parameters": {
+        "jsCode": "const brackets = [];\n\nlet current_date = DateTime.now().setZone('Europe/Paris');\nlet end_date = current_date.plus({ day: 21 });\n\ndo {\n  let setLower, setUpper;\n\n  if (current_date.weekday < 6) {\n    setLower = { hour: 18, minute: 30 };\n    setUpper = { hour: 21, minute: 0 };\n  } else {\n    setLower = { hour: 15, minute: 0 };\n    setUpper = { hour: 19, minute: 0 };\n  }\n\n  brackets.push({\n    json: {\n      lower: current_date.set(setLower).toISO(),\n      upper: current_date.set(setUpper).toISO()\n    }\n  });\n\n  current_date = current_date.plus({ day: 1 });\n} while (current_date <= end_date);\n\nreturn brackets;"
+      },
+      "id": "a1b2c3d4-0002-0002-0002-000000000002",
+      "name": "Set date brackets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-288, -112]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-64, -112],
+      "id": "a1b2c3d4-0003-0003-0003-000000000003",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sb-0001-0001-0001-0001-000000000001",
+              "name": "lower",
+              "value": "={{ $json.lower }}",
+              "type": "string"
+            },
+            {
+              "id": "sb-0001-0001-0001-0001-000000000002",
+              "name": "upper",
+              "value": "={{ $json.upper }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [160, -112],
+      "id": "a1b2c3d4-00bb-00bb-00bb-0000000000bb",
+      "name": "Store Bracket"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/calendar/v3/users/me/calendarList",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [384, -112],
+      "id": "a1b2c3d4-0004-0004-0004-000000000004",
+      "name": "List Calendars",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "HY2WpASmr4MBUuMr",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "items",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [608, -112],
+      "id": "a1b2c3d4-0005-0005-0005-000000000005",
+      "name": "Calendars to List"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2eada65b-94c2-45f9-9073-08ae68f93580",
+              "leftValue": "={{ $json.summary }}",
+              "rightValue": "Calendrier Travail Nathan",
+              "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" }
+            },
+            {
+              "id": "81ab6bc8-e92c-4005-a986-a3251cdaf080",
+              "leftValue": "={{ $json.summary }}",
+              "rightValue": "nathan.fonteyne59@gmail.com",
+              "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" }
+            },
+            {
+              "id": "5a7791aa-f04b-41a6-aee2-451f52f3edc7",
+              "leftValue": "={{ $json.summary }}",
+              "rightValue": "Nathan & Estelle",
+              "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" }
+            },
+            {
+              "id": "b2835662-8457-45d2-ab41-651a036cfef4",
+              "leftValue": "={{ $json.summary }}",
+              "rightValue": "benoitgeorge89@gmail.com",
+              "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" }
+            },
+            {
+              "id": "ee81298b-7d60-4246-8c1c-fdc4f6cbb0ed",
+              "leftValue": "={{ $json.summaryOverride }}",
+              "rightValue": "Agenda Yann",
+              "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" }
+            },
+            {
+              "id": "844907ca-9d5b-4644-a90a-a9c9f02b4356",
+              "leftValue": "={{ $json.summaryOverride }}",
+              "rightValue": "jules.vayre@gmail.com",
+              "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" }
+            },
+            {
+              "id": "844907ca-9d5b-4644-a90a-a9c9f02b4357",
+              "leftValue": "={{ $json.summary }}",
+              "rightValue": "jules.vayre@gmail.com",
+              "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" }
+            },
+            {
+              "id": "ce2b7ef4-0a84-4be5-af82-06fa6a8978fa",
+              "leftValue": "={{ $json.summary }}",
+              "rightValue": "calendrier ak",
+              "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" }
+            },
+            {
+              "id": "ce2b7ef4-0a84-4be5-af82-06fa6a8978fb",
+              "leftValue": "={{ $json.summaryOverride }}",
+              "rightValue": "calendrier ak",
+              "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [832, -112],
+      "id": "a1b2c3d4-0006-0006-0006-000000000006",
+      "name": "Filter Calendars"
+    },
+    {
+      "parameters": {
+        "jsCode": "const bracket = $('Store Bracket').first().json;\nconst lower = bracket.lower;\nconst upper = bracket.upper;\n\nif (!lower || !upper) {\n  throw new Error('lower/upper are missing from Store Bracket node');\n}\n\n// Keys are lowercase — matching is case-insensitive\nconst summaryToName = {\n  'calendrier travail nathan': 'Nathan',\n  'nathan.fonteyne59@gmail.com': 'Nathan',\n  'nathan & estelle': 'Nathan',\n  'benoitgeorge89@gmail.com': 'Raphaël',\n  'agenda yann': 'Yann',\n  'jules.vayre@gmail.com': 'Jules',\n  'calendrier ak': 'AK',\n};\n\nconst calendars = $input.all();\nconst items = [];\nconst nameMapping = {};\n\nfor (const cal of calendars) {\n  const id = cal.json.id;\n  const summary = (cal.json.summaryOverride || cal.json.summary || '').trim().toLowerCase();\n  items.push({ id });\n  nameMapping[id] = summaryToName[summary] || summary;\n}\n\nreturn [{\n  json: {\n    freeBusyBody: JSON.stringify({ timeMin: lower, timeMax: upper, timeZone: 'Europe/Paris', items }),\n    nameMapping,\n    lower,\n    upper\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1056, -112],
+      "id": "a1b2c3d4-0007-0007-0007-000000000007",
+      "name": "Build FreeBusy Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/calendar/v3/freeBusy",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.freeBusyBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1280, -112],
+      "id": "a1b2c3d4-0008-0008-0008-000000000008",
+      "name": "Call FreeBusy API",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "HY2WpASmr4MBUuMr",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const buildItem = $('Build FreeBusy Request').first();\nconst nameMapping = buildItem.json.nameMapping;\nconst lower = buildItem.json.lower;\nconst upper = buildItem.json.upper;\n\nconst calendarsData = $json.calendars || {};\n\nconst people = Object.entries(calendarsData).map(([calId, data]) => ({\n  name: nameMapping[calId] || calId,\n  calendar_id: calId,\n  available: !(data.busy && data.busy.length > 0)\n}));\n\nreturn [{\n  json: {\n    lower,\n    upper,\n    people,\n    allAvailable: people.every(p => p.available)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1504, -112],
+      "id": "a1b2c3d4-0009-0009-0009-000000000009",
+      "name": "Parse FreeBusy Response"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ef001001-0001-0001-0001-000000000001",
+              "name": "lower",
+              "value": "={{ $json.lower }}",
+              "type": "string"
+            },
+            {
+              "id": "ef001001-0002-0002-0002-000000000002",
+              "name": "upper",
+              "value": "={{ $json.upper }}",
+              "type": "string"
+            },
+            {
+              "id": "ef001001-0003-0003-0003-000000000003",
+              "name": "people",
+              "value": "={{ $json.people }}",
+              "type": "array"
+            },
+            {
+              "id": "ef001001-0004-0004-0004-000000000004",
+              "name": "allAvailable",
+              "value": "={{ $json.allAvailable }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1728, -48],
+      "id": "a1b2c3d4-0010-0010-0010-000000000010",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [160, -304],
+      "id": "a1b2c3d4-0011-0011-0011-000000000011",
+      "name": "Aggregate All Slots"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.data || [];\n\nreturn [{\n  json: {\n    slots: data.map(item => ({\n      lower:        item.lower,\n      upper:        item.upper,\n      allAvailable: item.allAvailable,\n      people:       item.people || []\n    }))\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [384, -304],
+      "id": "a1b2c3d4-0012-0012-0012-000000000012",
+      "name": "Format Payload"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [608, -304],
+      "id": "a1b2c3d4-0014-0014-0014-000000000014",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Set date brackets", "type": "main", "index": 0 }]]
+    },
+    "Set date brackets": {
+      "main": [[{ "node": "Loop Over Items", "type": "main", "index": 0 }]]
+    },
+    "Loop Over Items": {
+      "main": [
+        [{ "node": "Aggregate All Slots", "type": "main", "index": 0 }],
+        [{ "node": "Store Bracket",       "type": "main", "index": 0 }]
+      ]
+    },
+    "Store Bracket": {
+      "main": [[{ "node": "List Calendars", "type": "main", "index": 0 }]]
+    },
+    "List Calendars": {
+      "main": [[{ "node": "Calendars to List", "type": "main", "index": 0 }]]
+    },
+    "Calendars to List": {
+      "main": [[{ "node": "Filter Calendars", "type": "main", "index": 0 }]]
+    },
+    "Filter Calendars": {
+      "main": [[{ "node": "Build FreeBusy Request", "type": "main", "index": 0 }]]
+    },
+    "Build FreeBusy Request": {
+      "main": [[{ "node": "Call FreeBusy API", "type": "main", "index": 0 }]]
+    },
+    "Call FreeBusy API": {
+      "main": [[{ "node": "Parse FreeBusy Response", "type": "main", "index": 0 }]]
+    },
+    "Parse FreeBusy Response": {
+      "main": [[{ "node": "Edit Fields", "type": "main", "index": 0 }]]
+    },
+    "Edit Fields": {
+      "main": [[{ "node": "Loop Over Items", "type": "main", "index": 0 }]]
+    },
+    "Aggregate All Slots": {
+      "main": [[{ "node": "Format Payload", "type": "main", "index": 0 }]]
+    },
+    "Format Payload": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Paris",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [
+    { "name": "calendar operations" }
+  ]
+}

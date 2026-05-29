@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Band Calendar</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>🎸 Band Calendar</h1>
+    <span id="last-checked" class="last-checked"></span>
+  </div>
+  <button id="btn-refresh" class="btn-primary">Refresh availability</button>
+</header>
+
+<div class="layout">
+
+  <!-- ── Filters ── -->
+  <aside class="filters">
+    <h2>Filters</h2>
+
+    <label class="filter-label">Include people</label>
+    <div class="people-list" id="people-list"></div>
+
+  </aside>
+
+  <!-- ── Calendar ── -->
+  <main>
+    <div class="calendar-header">
+      <span>Mon</span><span>Tue</span><span>Wed</span>
+      <span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+    </div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+
+    <div class="legend" id="legend"></div>
+  </main>
+
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<div id="modal-overlay" class="modal-overlay hidden">
+  <div class="modal">
+    <button class="modal-close" id="modal-close">&#x2715;</button>
+    <div class="modal-date" id="modal-date"></div>
+    <div class="modal-time" id="modal-time"></div>
+    <div class="modal-section">
+      <div class="modal-section-title available">Available</div>
+      <div class="modal-people" id="modal-available"></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title busy">Not available</div>
+      <div class="modal-people" id="modal-busy"></div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
