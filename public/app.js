@@ -92,14 +92,22 @@ function renderCalendar() {
       cell.appendChild(lbl);
 
     } else if (slot) {
-      const visible  = slot.people.filter(p => selectedSet.has(p.id));
-      const avail    = visible.filter(p => p.is_available);
-      const allAvail = visible.length > 0 && avail.length === visible.length;
+      const visible = slot.people.filter(p => selectedSet.has(p.id));
+      const avail   = visible.filter(p => p.is_available);
 
-      // Fix: never add an empty string to classList
       cell.classList.add('has-slot');
-      if (allAvail)          cell.classList.add('all-available');
-      else if (avail.length) cell.classList.add(`heat-${Math.min(avail.length, 6)}`);
+      if (visible.length > 0) {
+        if (avail.length === visible.length) {
+          cell.classList.add('all-available');
+        } else {
+          const unavailRatio = (visible.length - avail.length) / visible.length;
+          if      (unavailRatio <= 0.2) cell.classList.add('heat-1');
+          else if (unavailRatio <= 0.4) cell.classList.add('heat-2');
+          else if (unavailRatio <= 0.6) cell.classList.add('heat-3');
+          else if (unavailRatio <= 0.8) cell.classList.add('heat-4');
+          else                          cell.classList.add('heat-5');
+        }
+      }
 
       const timeEl = document.createElement('div');
       timeEl.className = 'cell-time';

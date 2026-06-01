@@ -186,13 +186,12 @@ main {
   border-color: var(--border);
 }
 
-/* Heat map: more people = stronger highlight */
-.cal-cell.heat-1 { border-color: #fbbc0540; background: #fbbc0508; }
-.cal-cell.heat-2 { border-color: #fbbc0570; background: #fbbc0512; }
-.cal-cell.heat-3 { border-color: #34a85370; background: #34a85312; }
-.cal-cell.heat-4 { border-color: #34a85399; background: #34a85320; }
-.cal-cell.heat-5 { border-color: #4285f499; background: #4285f420; }
-.cal-cell.heat-6 { border-color: #4285f4cc; background: #4285f430; }
+/* Heat map: ratio of unavailable people — amber → orange → red */
+.cal-cell.heat-1 { border-color: #f59e0b99; background: #f59e0b10; } /* ≤20% unavail */
+.cal-cell.heat-2 { border-color: #f97316aa; background: #f9731615; } /* ≤40% unavail */
+.cal-cell.heat-3 { border-color: #ef4444aa; background: #ef444418; } /* ≤60% unavail */
+.cal-cell.heat-4 { border-color: #dc2626bb; background: #dc262620; } /* ≤80% unavail */
+.cal-cell.heat-5 { border-color: #b91c1ccc; background: #b91c1c28; } /* >80%  unavail */
 
 .cal-cell.all-available {
   border-color: #34a853 !important;

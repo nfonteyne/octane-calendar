@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const brackets = [];\n\nlet current_date = DateTime.now().setZone('Europe/Paris');\nlet end_date = current_date.plus({ day: 21 });\n\ndo {\n  let setLower, setUpper;\n\n  if (current_date.weekday < 6) {\n    setLower = { hour: 18, minute: 30 };\n    setUpper = { hour: 21, minute: 0 };\n  } else {\n    setLower = { hour: 15, minute: 0 };\n    setUpper = { hour: 19, minute: 0 };\n  }\n\n  brackets.push({\n    json: {\n      lower: current_date.set(setLower).toISO(),\n      upper: current_date.set(setUpper).toISO()\n    }\n  });\n\n  current_date = current_date.plus({ day: 1 });\n} while (current_date <= end_date);\n\nreturn brackets;"
+        "jsCode": "const brackets = [];\n\nlet current_date = DateTime.now().setZone('Europe/Paris');\nlet end_date = current_date.plus({ day: 21 });\n\ndo {\n  let setLower, setUpper;\n\n  if (current_date.weekday < 6) {\n    setLower = { hour: 18, minute: 30 };\n    setUpper = { hour: 21, minute: 0 };\n  } else {\n    setLower = { hour: 15, minute: 0 };\n    setUpper = { hour: 19, minute: 0 };\n  }\n\n  const lower = current_date.set(setLower);\n  const upper = current_date.set(setUpper);\n\n  brackets.push({\n    json: {\n      lower: lower.toISO(),\n      upper: upper.toISO(),\n      displayLower: lower.plus({ minutes: 30 }).toISO(),\n      displayUpper: upper.minus({ minutes: 30 }).toISO()\n    }\n  });\n\n  current_date = current_date.plus({ day: 1 });\n} while (current_date <= end_date);\n\nreturn brackets;"
       },
       "id": "a1b2c3d4-0002-0002-0002-000000000002",
       "name": "Set date brackets",
@@ -49,6 +49,18 @@
               "id": "sb-0001-0001-0001-0001-000000000002",
               "name": "upper",
               "value": "={{ $json.upper }}",
+              "type": "string"
+            },
+            {
+              "id": "sb-0001-0001-0001-0001-000000000003",
+              "name": "displayLower",
+              "value": "={{ $json.displayLower }}",
+              "type": "string"
+            },
+            {
+              "id": "sb-0001-0001-0001-0001-000000000004",
+              "name": "displayUpper",
+              "value": "={{ $json.displayUpper }}",
               "type": "string"
             }
           ]
@@ -168,31 +180,36 @@
     },
     {
       "parameters": {
-        "jsCode": "const bracket = $('Store Bracket').first().json;\nconst lower = bracket.lower;\nconst upper = bracket.upper;\n\nif (!lower || !upper) {\n  throw new Error('lower/upper are missing from Store Bracket node');\n}\n\n// Keys are lowercase — matching is case-insensitive\nconst summaryToName = {\n  'calendrier travail nathan': 'Nathan',\n  'nathan.fonteyne59@gmail.com': 'Nathan',\n  'nathan & estelle': 'Nathan',\n  'benoitgeorge89@gmail.com': 'Raphaël',\n  'agenda yann': 'Yann',\n  'jules.vayre@gmail.com': 'Jules',\n  'calendrier ak': 'AK',\n};\n\nconst calendars = $input.all();\nconst items = [];\nconst nameMapping = {};\n\nfor (const cal of calendars) {\n  const id = cal.json.id;\n  const summary = (cal.json.summaryOverride || cal.json.summary || '').trim().toLowerCase();\n  items.push({ id });\n  nameMapping[id] = summaryToName[summary] || summary;\n}\n\nreturn [{\n  json: {\n    freeBusyBody: JSON.stringify({ timeMin: lower, timeMax: upper, timeZone: 'Europe/Paris', items }),\n    nameMapping,\n    lower,\n    upper\n  }\n}];"
+        "jsCode": "const bracket = $('Store Bracket').first().json;\nconst lower = bracket.lower;\nconst upper = bracket.upper;\n\nif (!lower || !upper) {\n  throw new Error('lower/upper are missing from Store Bracket node');\n}\n\nconst summaryToName = {\n  'calendrier travail nathan': 'Nathan',\n  'nathan.fonteyne59@gmail.com': 'Nathan',\n  'nathan & estelle': 'Nathan',\n  'benoitgeorge89@gmail.com': 'Raphaël',\n  'agenda yann': 'Yann',\n  'jules.vayre@gmail.com': 'Jules',\n  'calendrier ak': 'AK',\n};\n\nreturn $input.all().map(cal => {\n  const id = cal.json.id;\n  const summary = (cal.json.summaryOverride || cal.json.summary || '').trim().toLowerCase();\n  return {\n    json: {\n      calendarId: encodeURIComponent(id),\n      personName: summaryToName[summary] || summary,\n      lower,\n      upper,\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1056, -112],
       "id": "a1b2c3d4-0007-0007-0007-000000000007",
-      "name": "Build FreeBusy Request"
+      "name": "Prepare Calendars"
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://www.googleapis.com/calendar/v3/freeBusy",
+        "method": "GET",
+        "url": "=https://www.googleapis.com/calendar/v3/calendars/{{ $json.calendarId }}/events",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleCalendarOAuth2Api",
-        "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "application/json",
-        "body": "={{ $json.freeBusyBody }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "timeMin", "value": "={{ $json.lower }}" },
+            { "name": "timeMax", "value": "={{ $json.upper }}" },
+            { "name": "singleEvents", "value": "true" },
+            { "name": "maxResults", "value": "1" }
+          ]
+        },
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1280, -112],
       "id": "a1b2c3d4-0008-0008-0008-000000000008",
-      "name": "Call FreeBusy API",
+      "name": "Call Events API",
       "credentials": {
         "googleCalendarOAuth2Api": {
           "id": "HY2WpASmr4MBUuMr",
@@ -202,13 +219,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const buildItem = $('Build FreeBusy Request').first();\nconst nameMapping = buildItem.json.nameMapping;\nconst lower = buildItem.json.lower;\nconst upper = buildItem.json.upper;\n\nconst calendarsData = $json.calendars || {};\n\nconst people = Object.entries(calendarsData).map(([calId, data]) => ({\n  name: nameMapping[calId] || calId,\n  calendar_id: calId,\n  available: !(data.busy && data.busy.length > 0)\n}));\n\nreturn [{\n  json: {\n    lower,\n    upper,\n    people,\n    allAvailable: people.every(p => p.available)\n  }\n}];"
+        "jsCode": "const preparedCalendars = $('Prepare Calendars').all();\nconst responses = $input.all();\nconst bracket = $('Store Bracket').first().json;\n\nconst people = responses.map((response, i) => {\n  const cal = preparedCalendars[i];\n  const personName = cal ? cal.json.personName : `calendar_${i}`;\n  // Filter out cancelled events; any remaining event means the person is busy\n  const events = (response.json.items || []).filter(e => e.status !== 'cancelled');\n  return {\n    name: personName,\n    available: events.length === 0\n  };\n});\n\nreturn [{\n  json: {\n    lower: bracket.lower,\n    upper: bracket.upper,\n    displayLower: bracket.displayLower,\n    displayUpper: bracket.displayUpper,\n    people,\n    allAvailable: people.every(p => p.available)\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1504, -112],
       "id": "a1b2c3d4-0009-0009-0009-000000000009",
-      "name": "Parse FreeBusy Response"
+      "name": "Parse Events Response"
     },
     {
       "parameters": {
@@ -224,6 +241,18 @@
               "id": "ef001001-0002-0002-0002-000000000002",
               "name": "upper",
               "value": "={{ $json.upper }}",
+              "type": "string"
+            },
+            {
+              "id": "ef001001-0005-0005-0005-000000000005",
+              "name": "displayLower",
+              "value": "={{ $json.displayLower }}",
+              "type": "string"
+            },
+            {
+              "id": "ef001001-0006-0006-0006-000000000006",
+              "name": "displayUpper",
+              "value": "={{ $json.displayUpper }}",
               "type": "string"
             },
             {
@@ -261,7 +290,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.first().json.data || [];\n\nreturn [{\n  json: {\n    slots: data.map(item => ({\n      lower:        item.lower,\n      upper:        item.upper,\n      allAvailable: item.allAvailable,\n      people:       item.people || []\n    }))\n  }\n}];"
+        "jsCode": "const data = $input.first().json.data || [];\n\nreturn [{\n  json: {\n    slots: data.map(item => ({\n      lower:        item.displayLower,\n      upper:        item.displayUpper,\n      allAvailable: item.allAvailable,\n      people:       item.people || []\n    }))\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -307,15 +336,15 @@
       "main": [[{ "node": "Filter Calendars", "type": "main", "index": 0 }]]
     },
     "Filter Calendars": {
-      "main": [[{ "node": "Build FreeBusy Request", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Prepare Calendars", "type": "main", "index": 0 }]]
     },
-    "Build FreeBusy Request": {
-      "main": [[{ "node": "Call FreeBusy API", "type": "main", "index": 0 }]]
+    "Prepare Calendars": {
+      "main": [[{ "node": "Call Events API", "type": "main", "index": 0 }]]
     },
-    "Call FreeBusy API": {
-      "main": [[{ "node": "Parse FreeBusy Response", "type": "main", "index": 0 }]]
+    "Call Events API": {
+      "main": [[{ "node": "Parse Events Response", "type": "main", "index": 0 }]]
     },
-    "Parse FreeBusy Response": {
+    "Parse Events Response": {
       "main": [[{ "node": "Edit Fields", "type": "main", "index": 0 }]]
     },
     "Edit Fields": {
