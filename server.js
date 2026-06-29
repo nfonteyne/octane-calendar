@@ -121,5 +121,13 @@ app.post('/api/refresh', (req, res) => {
   })();
 });
 
+function _resetWorkflowState() {
+  workflowState = { status: 'idle', triggeredAt: null, message: null };
+}
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Calendar app running on http://localhost:${PORT}`));
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Calendar app running on http://localhost:${PORT}`));
+}
+
+module.exports = { app, _resetWorkflowState };

@@ -5,7 +5,7 @@ const path = require('path');
 const dataDir = path.join(__dirname, 'data');
 fs.mkdirSync(dataDir, { recursive: true });
 
-const db = new Database(path.join(dataDir, 'calendar.db'));
+const db = new Database(process.env.DB_PATH || path.join(dataDir, 'calendar.db'));
 
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
